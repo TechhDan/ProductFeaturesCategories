@@ -28,6 +28,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+require dirname(__FILE__).'/classes/FeatureCategory.php';
+
 class ProductFeaturesCategories extends Module
 {
     protected $html;
@@ -106,6 +108,10 @@ class ProductFeaturesCategories extends Module
             return $this->renderForm();
         }
 
+        if (Tools::getIsset('updatefeature_category') && (int)Tools::getValue('id_feature_category') > 0) {
+            return $this->renderForm();
+        }
+
         if (Tools::isSubmit($this->name.'submitCategory') ||
             Tools::isSubmit('submit'.$this->name.'configuration')) {
             $this->postProcess();
@@ -123,21 +129,21 @@ class ProductFeaturesCategories extends Module
     {
         if ((bool)Tools::getValue('id_productfeaturescategories')) {
 
-            $original = Db::getInstance()->ExecuteS(
+            $original = Db::getInstance()->executeS(
                 'SELECT `category_name` FROM '._DB_PREFIX_.'productfeaturescategories
                 WHERE id_productfeaturescategories = ' . (int)Tools::getValue('id_productfeaturescategories')
             );
             if ($original) {
                 $original = $original[0]['category_name'];
 
-                Db::getInstance()->Execute('
+                Db::getInstance()->execute('
                 UPDATE '._DB_PREFIX_.'feature_lang 
                 SET category = null
                 WHERE category = \''.pSQL($original).'\' 
             ');
             }
 
-            Db::getInstance()->Execute('
+            Db::getInstance()->execute('
                 DELETE FROM '._DB_PREFIX_.'productfeaturescategories 
                 WHERE id_productfeaturescategories = '.(int)Tools::getValue('id_productfeaturescategories').'
             ');
@@ -147,28 +153,22 @@ class ProductFeaturesCategories extends Module
 
     private function generateFeatureCategoriesList()
     {
-        $id_lang = (int)$this->context->language->id;
-        $id_shop = (int)$this->context->shop->id;
-
-        $links = Db::getInstance()->ExecuteS(
-            'SELECT '._DB_PREFIX_.'feature_category_lang.`name`, '._DB_PREFIX_.'feature_category.`id_feature_category`
-            FROM `'._DB_PREFIX_.'feature_category` fc
-            INNER JOIN `'._DB_PREFIX_.'feature_category_lang` fcl ON fc.`id_feature_category` = fcl.`id_feature_category`
-            WHERE fcl.`id_lang` = '.$id_lang.' AND fc.`id_shop` = '.$id_shop
-        );
+        $links = FeatureCategory::getFeatureCategories();
+/*        foreach($links as $key => $link) {
+            $links[$key]['position'] = (int)$link['id_feature_category']; 
+        }*/
 
         $field_list = array(
             'id_feature_category' => array(
                 'title' => $this->l('Id'),
                 'width' => 140,
                 'type' => 'text',
-                'position' => 'position'
             ),
             'name' => array(
                 'title' => $this->l('Name'),
-                'width' => 140,
+                'width' => 'auto',
                 'type' => 'text',
-            ),
+            )
         );
         $helper = new HelperList();
         $helper->class = 'FeatureCategory';
@@ -208,7 +208,8 @@ class ProductFeaturesCategories extends Module
                         'type' => 'text',
                         'label' => $this->l('Feature Category'),
                         'name' => 'FEATURE_CATEGORY_NAME',
-                        'required' => true
+                        'required' => true,
+                        'lang' => true
                     ),
                     array(
                         'type' => 'hidden',
@@ -228,15 +229,14 @@ class ProductFeaturesCategories extends Module
 
         $helper = new HelperForm();
         $helper->show_toolbar = false;
-        $helper->class = 'ProductFeaturesCategories';
-        $helper->table = 'productfeaturescategories';
-        $lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
-        $helper->default_form_language = $lang->id;
-        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ?
+        $helper->class = 'FeatureCategory';
+        $helper->table = 'feature_category';
+        $helper->default_form_language = (int)Configuration::get('PS_LANG_DEFAULT');
+        $helper->languages = $this->context->controller->getLanguages();
+        $helper->allow_employee_form_lang = (int)Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ?
         Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-        $this->fields_form = array();
-        $helper->id = (int)Tools::getValue('id_productfeaturescategories');
-        $helper->identifier = $this->identifier;
+        $helper->id = (int)Tools::getValue('id_feature_category');
+        $helper->identifier = 'id_feature_category';
         $helper->submit_action = $this->name.'submitCategory';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).
         '&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
@@ -250,26 +250,32 @@ class ProductFeaturesCategories extends Module
         return $helper->generateForm(array($fields_form));
     }
 
-    public function getConfigFieldsValues($id)
+    public function getConfigFieldsValues($id_feature_category)
     {
-        if ((bool)Tools::getValue('id_productfeaturescategories')) {
-            $category_id = Tools::getValue('id_productfeaturescategories');
+        if ($id_feature_category) {
+
+            $data = Db::getInstance()->executeS(
+                'SELECT id_lang, name FROM '._DB_PREFIX_.'feature_category_lang
+                WHERE id_feature_category = '. $id_feature_category
+            );
+            
+            $result = array();
+            $result['CATEGORY_ID'] = $id_feature_category;
+            foreach (Language::getLanguages() as $lang) {
+                foreach ($data as $trans) {
+                    if ($trans['id_lang'] == $lang['id_lang']) {
+                        $result['FEATURE_CATEGORY_NAME'][$lang['id_lang']] = $trans['name'];
+                    }
+                }
+            }
+            return $result;
         } else {
-            $category_id = null;
-        }
-        if ($id !== false) {
-            $data = Db::getInstance()->getRow(
-                'SELECT * FROM '._DB_PREFIX_.'productfeaturescategories WHERE id_productfeaturescategories = '. $id
-            );
-            return array(
-                'FEATURE_CATEGORY_NAME' => $data['category_name'],
-                'CATEGORY_ID' => $category_id
-            );
-        } else {
-            return array(
-                'FEATURE_CATEGORY_NAME' => '',
-                'CATEGORY_ID' => $category_id
-            );
+            $result = array();
+            $result['CATEGORY_ID'] = $id_feature_category;
+            foreach (Language::getLanguages() as $lang) {
+                $result['FEATURE_CATEGORY_NAME'][$lang['id_lang']] = '';
+            }
+            return $result;
         }
         
     }
@@ -372,30 +378,34 @@ class ProductFeaturesCategories extends Module
 
     protected function postProcess()
     {
-        if (Tools::isSubmit($this->name.'submitCategory') && (bool)Tools::getValue('FEATURE_CATEGORY_NAME')) {
-            if ((bool)Tools::getValue('CATEGORY_ID')) {
-                $original = Db::getInstance()->ExecuteS(
-                    'SELECT `category_name` FROM '._DB_PREFIX_.'productfeaturescategories
-                    WHERE id_productfeaturescategories = ' . (int)Tools::getValue('CATEGORY_ID')
+        if (Tools::isSubmit($this->name.'submitCategory')) {
+            if (Tools::getValue('CATEGORY_ID')) {
+                $original = Db::getInstance()->executeS(
+                    'SELECT `name` FROM '._DB_PREFIX_.'feature_cartegory_lang
+                    WHERE id_feature_category = ' . (int)Tools::getValue('CATEGORY_ID')
                 );
                 $original = $original[0]['category_name'];
 
-                Db::getInstance()->Execute('
+                Db::getInstance()->execute('
                     UPDATE '._DB_PREFIX_.'feature_lang 
                     SET category = \''.pSQL(Tools::getValue('FEATURE_CATEGORY_NAME')).'\' 
                     WHERE category = \''.pSQL($original).'\' 
                 ');
 
-                Db::getInstance()->Execute('
+                Db::getInstance()->execute('
                     UPDATE '._DB_PREFIX_.'productfeaturescategories 
                     SET category_name = \''.pSQL(Tools::getValue('FEATURE_CATEGORY_NAME')).'\' 
                     WHERE id_productfeaturescategories = '.(int)Tools::getValue('CATEGORY_ID').'
                 ');
             } else {
-                Db::getInstance()->Execute('
-                INSERT INTO '._DB_PREFIX_.'productfeaturescategories (category_name)
-                VALUES (\''.pSQL(Tools::getValue('FEATURE_CATEGORY_NAME')).'\')
-                ');
+                $name = array();
+                foreach (Language::getLanguages(false) as $lang) {
+                    $name[$lang['id_lang']] = Tools::getValue('FEATURE_CATEGORY_NAME_'.$lang['id_lang']);
+                }
+                $FeatureCategory = new FeatureCategory();
+                $FeatureCategory->name = $name;
+                $FeatureCategory->id_shop = Shop::getContextShopID();
+                $FeatureCategory->add();
             }
             
         }

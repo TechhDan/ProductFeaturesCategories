@@ -29,7 +29,7 @@ $sql = array();
 $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature` ADD category INT(10) UNSIGNED DEFAULT 0';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'feature_category` (
-    `id_feature_category` INT(10) UNSIGNED NOT NULL,
+    `id_feature_category` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `id_shop` INT(10) UNSIGNED NOT NULL DEFAULT 1,
     `position` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
     PRIMARY KEY (`id_feature_category`)

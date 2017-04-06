@@ -26,13 +26,13 @@
 function toggleFeatures(target) {
 	var getStyle = document.getElementsByClassName(target)[0].style.display;
 	if (getStyle == 'none') {
-		[].forEach.call(document.querySelectorAll('.'+target), function(el) {
+		[].forEach.call(document.querySelectorAll('.' + target), function(el) {
 			el.style.display = '';
-		})
+		});
 	} else {
-		[].forEach.call(document.querySelectorAll('.'+target), function(el) {
+		[].forEach.call(document.querySelectorAll('.' + target), function(el) {
 			el.style.display = 'none';
-		})
+		});
 	}
 }
 </script>

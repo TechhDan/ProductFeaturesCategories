@@ -44,4 +44,19 @@ class FeatureCategory extends ObjectModel
             'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128),
         ),
     );
+
+    public static function getFeatureCategories()
+    {
+        $id_lang = (int)Context::getContext()->language->id;
+        $id_shop = (int)Context::getContext()->shop->id;
+
+        $feature_categories = Db::getInstance()->ExecuteS(
+            'SELECT fcl.`name`, fc.`id_feature_category`, fc.`position`
+            FROM `'._DB_PREFIX_.'feature_category` fc
+            INNER JOIN `'._DB_PREFIX_.'feature_category_lang` fcl ON fc.`id_feature_category` = fcl.`id_feature_category`
+            WHERE fcl.`id_lang` = '.$id_lang.' AND fc.`id_shop` = '.$id_shop
+        );
+
+        return $feature_categories;
+    }
 }
