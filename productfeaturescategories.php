@@ -103,15 +103,13 @@ class ProductFeaturesCategories extends Module
 
     public function getContent()
     {
-        if (Tools::getValue('addNewFeatureCategory') !== false ||
-            Tools::getValue('updateproductfeaturescategories') !== false) {
+        // Add or Update feature category form
+        if (Tools::getValue('addNewFeatureCategory') !== false || 
+            (Tools::getIsset('updatefeature_category') && (int)Tools::getValue('id_feature_category') > 0)) {
             return $this->renderForm();
         }
 
-        if (Tools::getIsset('updatefeature_category') && (int)Tools::getValue('id_feature_category') > 0) {
-            return $this->renderForm();
-        }
-
+        // Post process for update/add & configuration forms
         if (Tools::isSubmit($this->name.'submitCategory') ||
             Tools::isSubmit('submit'.$this->name.'configuration')) {
             $this->postProcess();
@@ -122,7 +120,7 @@ class ProductFeaturesCategories extends Module
         }
 
         $this->html .= $this->displayInformation();
-        return $this->html.$this->generateFeatureCategoriesList().$this->renderConfigurationForm();
+        return $this->html.$this->generateFeatureCategoriesListTest().$this->generateFeatureCategoriesList().$this->renderConfigurationForm();
     }
 
     private function deleteEntry()
@@ -154,9 +152,6 @@ class ProductFeaturesCategories extends Module
     private function generateFeatureCategoriesList()
     {
         $links = FeatureCategory::getFeatureCategories();
-/*        foreach($links as $key => $link) {
-            $links[$key]['position'] = (int)$link['id_feature_category']; 
-        }*/
 
         $field_list = array(
             'id_feature_category' => array(
@@ -168,6 +163,11 @@ class ProductFeaturesCategories extends Module
                 'title' => $this->l('Name'),
                 'width' => 'auto',
                 'type' => 'text',
+            ),
+            'position' => array(
+                'title' => $this->l('Position'),
+                'type' => 'position',
+                'width' => 'auto',
             )
         );
         $helper = new HelperList();
@@ -177,7 +177,11 @@ class ProductFeaturesCategories extends Module
         $helper->tpl_vars['show_filters'] = true;
         $helper->shopLinkType = '';
         $helper->simple_header = false;
+        // Identifiers
         $helper->identifier = 'id_feature_category';
+        $helper->list_id = 'feature_category';
+        $helper->position_identifier = 'id_feature_category';
+
         $helper->actions = array('edit', 'delete');
         $helper->show_toolbar = true;
         $helper->module = $this;
@@ -193,6 +197,19 @@ class ProductFeaturesCategories extends Module
            )
         );
         return $helper->generateList($links, $field_list);
+    }
+
+    private function generateFeatureCategoriesListTest()
+    {
+        // Add Drag and Drop
+        $this->context->controller->addJqueryPlugin('tablednd');
+
+        if (version_compare(_PS_VERSION_, '1.6.0.11', '>=') === true) {
+            $this->context->controller->addJS(_PS_JS_DIR_.'admin/dnd.js');
+        } else {
+            $this->context->controller->addJS(_PS_JS_DIR_.'admin-dnd.js');
+        }
+        return $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
     }
 
     public function renderForm()
@@ -380,23 +397,14 @@ class ProductFeaturesCategories extends Module
     {
         if (Tools::isSubmit($this->name.'submitCategory')) {
             if (Tools::getValue('CATEGORY_ID')) {
-                $original = Db::getInstance()->executeS(
-                    'SELECT `name` FROM '._DB_PREFIX_.'feature_cartegory_lang
-                    WHERE id_feature_category = ' . (int)Tools::getValue('CATEGORY_ID')
-                );
-                $original = $original[0]['category_name'];
-
-                Db::getInstance()->execute('
-                    UPDATE '._DB_PREFIX_.'feature_lang 
-                    SET category = \''.pSQL(Tools::getValue('FEATURE_CATEGORY_NAME')).'\' 
-                    WHERE category = \''.pSQL($original).'\' 
-                ');
-
-                Db::getInstance()->execute('
-                    UPDATE '._DB_PREFIX_.'productfeaturescategories 
-                    SET category_name = \''.pSQL(Tools::getValue('FEATURE_CATEGORY_NAME')).'\' 
-                    WHERE id_productfeaturescategories = '.(int)Tools::getValue('CATEGORY_ID').'
-                ');
+                $name = array();
+                foreach (Language::getLanguages(false) as $lang) {
+                    $name[$lang['id_lang']] = Tools::getValue('FEATURE_CATEGORY_NAME_'.$lang['id_lang']);
+                }
+                $FeatureCategory = new FeatureCategory((int)Tools::getValue('CATEGORY_ID'));
+                $FeatureCategory->name = $name;
+                $FeatureCategory->id_shop = Shop::getContextShopID();
+                $FeatureCategory->update();
             } else {
                 $name = array();
                 foreach (Language::getLanguages(false) as $lang) {

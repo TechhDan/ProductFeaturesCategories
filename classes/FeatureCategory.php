@@ -39,8 +39,8 @@ class FeatureCategory extends ObjectModel
         'primary' => 'id_feature_category',
         'multilang' => true,
         'fields' => array(
-            'id_shop' => array('type' => self::TYPE_NOTHING, 'validate' => 'isUnsignedId'),
-            'position' => array('type' => self::TYPE_INT, 'validate' => 'isInt'),
+            'id_shop' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true),
+            'position' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true),
             'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128),
         ),
     );
