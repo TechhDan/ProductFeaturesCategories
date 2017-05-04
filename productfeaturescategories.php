@@ -48,7 +48,6 @@ class ProductFeaturesCategories extends Module
         $this->description = $this->l(
             'Organize catalog features into categories for improved administration and data-sheet browsing.'
         );
-
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
     }
 
@@ -57,14 +56,31 @@ class ProductFeaturesCategories extends Module
         Configuration::updateValue('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER', false);
         Configuration::updateValue('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS', true);
 
-        include(dirname(__FILE__).'/sql/install.php');
+        $install = include(dirname(__FILE__).'/sql/install.php');
         $this->installOverride();
 
-        return parent::install() &&
+        return $install &&
+            $this->installTab() &&
+            parent::install() &&
             $this->registerHook('header') &&
             $this->registerHook('backOfficeHeader') &&
             $this->registerHook('displayBackOfficeHeader') &&
             $this->registerHook('displayFooterProduct');
+    }
+
+    public function installTab()
+    {
+        // Install tab
+        $parent_tab = new Tab();
+        // Need foreach for the language
+        $parent_tab->name[$this->context->language->id] = $this->l('Product Feature Categories');
+        $parent_tab->class_name = 'AdminProductFeaturesCategories';
+        $parent_tab->id_parent = 0;
+        $parent_tab->module = $this->name;
+        if (!$parent_tab->add()) {
+            return false;
+        }
+        return true;
     }
 
     public function installOverride()
@@ -85,10 +101,17 @@ class ProductFeaturesCategories extends Module
     {
         Configuration::deleteByName('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER');
         Configuration::deleteByName('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS');
+        $this->uninstallTab();
+        $uninstall = include(dirname(__FILE__).'/sql/uninstall.php');
 
-        include(dirname(__FILE__).'/sql/uninstall.php');
+        return $uninstall && parent::uninstall();
+    }
 
-        return parent::uninstall();
+    public function uninstallTab()
+    {
+        // Uninstall Tab
+        $tab = new Tab((int)Tab::getIdFromClassName('AdminProductFeaturesCategories'));
+        $tab->delete();
     }
 
     private function displayInformation()
@@ -103,6 +126,7 @@ class ProductFeaturesCategories extends Module
 
     public function getContent()
     {
+        return;
         // Add or Update feature category form
         if (Tools::getValue('addNewFeatureCategory') !== false || 
             (Tools::getIsset('updatefeature_category') && (int)Tools::getValue('id_feature_category') > 0)) {
@@ -412,6 +436,7 @@ class ProductFeaturesCategories extends Module
                 }
                 $FeatureCategory = new FeatureCategory();
                 $FeatureCategory->name = $name;
+                $FeatureCategory->position = 1;
                 $FeatureCategory->id_shop = Shop::getContextShopID();
                 $FeatureCategory->add();
             }

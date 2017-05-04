@@ -32,10 +32,11 @@
 
 $sql = array();
 
-$sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature_lang` DROP COLUMN category';
+$sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature` DROP COLUMN category';
 
 $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'feature_category`';
 $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'feature_category_lang`';
+$sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'feature_category_shop`';
 
 foreach ($sql as $query) {
     try {
@@ -48,3 +49,5 @@ foreach ($sql as $query) {
         return false;
     }
 }
+
+return true;

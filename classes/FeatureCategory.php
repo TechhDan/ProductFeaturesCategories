@@ -27,7 +27,6 @@
 class FeatureCategory extends ObjectModel
 {
     public $id_feature_category;
-    public $id_shop;
     public $position;
     public $name;
 
@@ -39,8 +38,7 @@ class FeatureCategory extends ObjectModel
         'primary' => 'id_feature_category',
         'multilang' => true,
         'fields' => array(
-            'id_shop' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true),
-            'position' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true),
+            'position' => array('type' => self::TYPE_INT, 'validate' => 'isInt'),
             'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128),
         ),
     );
