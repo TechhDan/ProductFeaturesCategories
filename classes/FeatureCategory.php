@@ -43,6 +43,92 @@ class FeatureCategory extends ObjectModel
         ),
     );
 
+    public function add($autodate = true, $null_values = false)
+    {
+        $this->position = self::getLastPosition(); 
+        return parent::add($autodate, true);
+    }
+
+    public function update($null_values = false)
+    {
+        if (parent::update($null_values)) {
+            return $this->cleanPositions();
+        }
+        return false;
+    }
+
+    public function delete()
+    {
+        if (parent::delete()) {
+            return $this->cleanPositions();
+        }
+        return false;
+    }
+
+    public static function getLastPosition()
+    {
+        $sql = '
+        SELECT MAX(position) + 1
+        FROM `'._DB_PREFIX_.'feature_category`';
+
+        return Db::getInstance()->getValue($sql);
+    }
+
+    public function updatePosition($way, $position)
+    {
+        if (!$res = Db::getInstance()->executeS('
+            SELECT fc.`id_feature_category`, fc.`position`
+            FROM `'._DB_PREFIX_.'feature_category` fc
+            ORDER BY fc.`position` ASC
+        ')) {
+            return false;
+        }
+
+        foreach($res as $feature_category) {
+            if ((int)$feature_category['id_feature_category'] == (int)$this->id) {
+                $moved_fc = $feature_category;
+            }
+        }
+
+        if (!isset($moved_fc) || !isset($position)) {
+            return false;
+        }
+
+        $result = Db::getInstance()->execute('
+            UPDATE `'._DB_PREFIX_.'feature_category`
+            SET `position`= `position` '.($way ? '- 1' : '+ 1').'
+            WHERE `position` '.($way ? '> '.(int)$moved_fc['position'].
+            ' AND `position` <= '.(int)$position : '< '.(int)$moved_fc['position'].
+            ' AND `position` >= '.(int)$position)
+        );
+
+        $result &= Db::getInstance()->execute('
+            UPDATE `'._DB_PREFIX_.'feature_category`
+            SET `position` = '.(int)$position.'
+            WHERE `id_feature_category` = '.(int)$moved_fc['id_feature_category']);
+
+        return $result;
+    }
+
+    public static function cleanPositions()
+    {
+        $sql = '
+            SELECT `id_feature_category`
+            FROM `'._DB_PREFIX_.'feature_category`
+            ORDER BY `position`
+        ';
+        $result = Db::getInstance()->executeS($sql);
+
+        for ($i = 0, $total = count($result); $i < $total; ++$i) {
+            $sql = '
+                UPDATE `'._DB_PREFIX_.'feature_category`
+                SET `position` = ' .(int)$i.'
+                WHERE `id_feature_category` = '.(int)$result[$i]['id_feature_category'];
+            Db::getInstance()->execute($sql);
+        }
+        return true;
+    }
+
     public static function getFeatureCategories()
     {
         $id_lang = (int)Context::getContext()->language->id;

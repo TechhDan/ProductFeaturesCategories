@@ -10,7 +10,7 @@ class AdminProductFeaturesCategoriesController extends ModuleAdminController
     	$this->identifier = 'id_feature_category';
     	$this->className = 'FeatureCategory';
     	$this->lang = true;
-        $this->position_identifier = 'position';
+        $this->position_identifier = 'id_feature_category';
     	$this->_defaultOrderBy = 'position';
 
     	$this->fields_list = array(
@@ -105,31 +105,28 @@ class AdminProductFeaturesCategoriesController extends ModuleAdminController
     public function postProcess()
     {
         if (Tools::isSubmit('submitAdd'.$this->table)) {
-
         }
         return parent::postProcess();
     }
 
     public function ajaxProcessUpdatePositions()
     {
-        // TODO update positions via Ajax later on
-        return;
         $way = (int)(Tools::getValue('way'));
-        $id_carrier = (int)(Tools::getValue('id'));
+        $id = (int)(Tools::getValue('id'));
         $positions = Tools::getValue($this->table);
 
         foreach ($positions as $position => $value) {
             $pos = explode('_', $value);
 
-            if (isset($pos[2]) && (int)$pos[2] === $id_carrier) {
-                if ($carrier = new Carrier((int)$pos[2])) {
-                    if (isset($position) && $carrier->updatePosition($way, $position)) {
-                        echo 'ok position '.(int)$position.' for carrier '.(int)$pos[1].'\r\n';
+            if (isset($pos[2]) && (int)$pos[2] === $id) {
+                if ($objectModel = new FeatureCategory((int)$pos[2])) {
+                    if (isset($position) && $objectModel->updatePosition($way, $position)) {
+                        echo 'ok position '.(int)$position.' for objectModel '.(int)$pos[1].'\r\n';
                     } else {
-                        echo '{"hasError" : true, "errors" : "Can not update carrier '.(int)$id_carrier.' to position '.(int)$position.' "}';
+                        echo '{"hasError" : true, "errors" : "Can not update objectModel '.(int)$id.' to position '.(int)$position.' "}';
                     }
                 } else {
-                    echo '{"hasError" : true, "errors" : "This carrier ('.(int)$id_carrier.') can t be loaded"}';
+                    echo '{"hasError" : true, "errors" : "This objectModel entry ('.(int)$id.') can t be loaded"}';
                 }
 
                 break;

@@ -70,14 +70,15 @@ class ProductFeaturesCategories extends Module
 
     public function installTab()
     {
-        // Install tab
-        $parent_tab = new Tab();
-        // Need foreach for the language
-        $parent_tab->name[$this->context->language->id] = $this->l('Product Feature Categories');
-        $parent_tab->class_name = 'AdminProductFeaturesCategories';
-        $parent_tab->id_parent = 0;
-        $parent_tab->module = $this->name;
-        if (!$parent_tab->add()) {
+        $new_tab = new Tab();
+        $new_tab->class_name = 'AdminProductFeaturesCategories';
+        $new_tab->id_parent = Tab::getIdFromClassName(' AdminCatalog');
+        $new_tab->module = $this->name;
+        $languages = Language::getLanguages();
+        foreach ($languages as $language) {
+            $new_tab->name[$language['id_lang']] = 'Product Feature Categories';
+        }
+        if (!$new_tab->add()) {
             return false;
         }
         return true;
