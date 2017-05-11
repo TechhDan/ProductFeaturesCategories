@@ -57,9 +57,11 @@ class ProductFeaturesCategories extends Module
         Configuration::updateValue('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS', true);
 
         $install = include(dirname(__FILE__).'/sql/install.php');
-        $this->installOverride();
+        $install = true;
 
         return $install &&
+            $this->installFixture() &&
+            $this->installOverride() &&
             $this->installTab() &&
             parent::install() &&
             $this->registerHook('header') &&
@@ -68,17 +70,33 @@ class ProductFeaturesCategories extends Module
             $this->registerHook('displayFooterProduct');
     }
 
+    public function installFixture()
+    {
+        $Fixture = new FeatureCategory();
+        $languages = Language::getLanguages();
+        foreach ($languages as $language) {
+            $Fixture->name[$language['id_lang']] = 'Default';
+        }
+        if ($Fixture->add()) {
+            return true;
+        }
+        return false;
+    }
+
     public function installTab()
     {
         $new_tab = new Tab();
         $new_tab->class_name = 'AdminProductFeaturesCategories';
-        $new_tab->id_parent = Tab::getIdFromClassName(' AdminCatalog');
+        $new_tab->id_parent = Tab::getIdFromClassName('AdminCatalog');
         $new_tab->module = $this->name;
         $languages = Language::getLanguages();
         foreach ($languages as $language) {
             $new_tab->name[$language['id_lang']] = 'Product Feature Categories';
         }
-        if (!$new_tab->add()) {
+        try {
+            $new_tab->add();
+        } catch (Exception $e) {
+            $this->_errors[] = 'Unable to add Tab';
             return false;
         }
         return true;
@@ -95,24 +113,62 @@ class ProductFeaturesCategories extends Module
         $fileData = Tools::file_get_contents(dirname(__FILE__).'/views/templates/admin/products/features.tpl');
         $filePath = _PS_ROOT_DIR_.'/override/controllers/admin/templates/products/features.tpl';
          
-        file_put_contents($filePath, $fileData);
+        if (!file_put_contents($filePath, $fileData)) {
+            return false;
+        }
+        return true;
+    }
+
+    public function uninstallOverride()
+    {
+        $file = _PS_ROOT_DIR_.'/override/controllers/admin/templates/products/features.tpl';
+
+        if (file_exists($file)) {
+            if (!unlink($file)) {
+                $this->_errors[] = 'Unable to delete features.tpl override';
+                return false;
+            }
+        }
+        return true;
     }
 
     public function uninstall()
     {
         Configuration::deleteByName('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER');
         Configuration::deleteByName('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS');
-        $this->uninstallTab();
         $uninstall = include(dirname(__FILE__).'/sql/uninstall.php');
 
-        return $uninstall && parent::uninstall();
+        return $this->uninstallTab() &&
+            $this->uninstallOverride() &&
+            $uninstall &&
+            parent::uninstall() &&
+            $this->cleanUpAfterPrestashop();
     }
 
     public function uninstallTab()
     {
         // Uninstall Tab
         $tab = new Tab((int)Tab::getIdFromClassName('AdminProductFeaturesCategories'));
-        $tab->delete();
+        try {
+            $tab->delete();
+        } catch (Exception $e) {
+            $this->_errors[] = 'Unable to delete Tab';
+            return false;
+        }
+        return true;
+    }
+
+    public function cleanUpAfterPrestashop()
+    {
+        $file = _PS_ROOT_DIR_.'/override/classes/Feature.php';
+        $content = file_get_contents($file);
+        $pattern = '/\'table\'(.*)\);/s';
+        $result = preg_replace($pattern, '', $content);
+        if (!file_put_contents($file, $result)) {
+            $this->_errors[] = 'Unable to clean up Feature.php file';
+            return false;
+        }
+        return true;
     }
 
     private function displayInformation()
@@ -127,199 +183,13 @@ class ProductFeaturesCategories extends Module
 
     public function getContent()
     {
-        return;
-        // Add or Update feature category form
-        if (Tools::getValue('addNewFeatureCategory') !== false || 
-            (Tools::getIsset('updatefeature_category') && (int)Tools::getValue('id_feature_category') > 0)) {
-            return $this->renderForm();
-        }
-
         // Post process for update/add & configuration forms
-        if (Tools::isSubmit($this->name.'submitCategory') ||
-            Tools::isSubmit('submit'.$this->name.'configuration')) {
+        if (Tools::isSubmit('submit'.$this->name.'configuration')) {
             $this->postProcess();
         }
 
-        if (Tools::getValue('deleteproductfeaturescategories') !== false) {
-            $this->deleteEntry();
-        }
-
         $this->html .= $this->displayInformation();
-        return $this->html.$this->generateFeatureCategoriesListTest().$this->generateFeatureCategoriesList().$this->renderConfigurationForm();
-    }
-
-    private function deleteEntry()
-    {
-        if ((bool)Tools::getValue('id_productfeaturescategories')) {
-
-            $original = Db::getInstance()->executeS(
-                'SELECT `category_name` FROM '._DB_PREFIX_.'productfeaturescategories
-                WHERE id_productfeaturescategories = ' . (int)Tools::getValue('id_productfeaturescategories')
-            );
-            if ($original) {
-                $original = $original[0]['category_name'];
-
-                Db::getInstance()->execute('
-                UPDATE '._DB_PREFIX_.'feature_lang 
-                SET category = null
-                WHERE category = \''.pSQL($original).'\' 
-            ');
-            }
-
-            Db::getInstance()->execute('
-                DELETE FROM '._DB_PREFIX_.'productfeaturescategories 
-                WHERE id_productfeaturescategories = '.(int)Tools::getValue('id_productfeaturescategories').'
-            ');
-            $this->html .= $this->displayConfirmation($this->l('Settings updated'));
-        }
-    }
-
-    private function generateFeatureCategoriesList()
-    {
-        $links = FeatureCategory::getFeatureCategories();
-
-        $field_list = array(
-            'id_feature_category' => array(
-                'title' => $this->l('Id'),
-                'width' => 140,
-                'type' => 'text',
-            ),
-            'name' => array(
-                'title' => $this->l('Name'),
-                'width' => 'auto',
-                'type' => 'text',
-            ),
-            'position' => array(
-                'title' => $this->l('Position'),
-                'type' => 'position',
-                'width' => 'auto',
-            )
-        );
-        $helper = new HelperList();
-        $helper->class = 'FeatureCategory';
-        $helper->table = 'feature_category';
-        $helper->bulk_actions = true;
-        $helper->tpl_vars['show_filters'] = true;
-        $helper->shopLinkType = '';
-        $helper->simple_header = false;
-        // Identifiers
-        $helper->identifier = 'id_feature_category';
-        $helper->list_id = 'feature_category';
-        $helper->position_identifier = 'id_feature_category';
-
-        $helper->actions = array('edit', 'delete');
-        $helper->show_toolbar = true;
-        $helper->module = $this;
-        $helper->title = 'Feature Categories';
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
-        $helper->toolbar_btn = array(
-           'add' => array(
-            'desc' => $this->l('Add new feature category'),
-            'href' => AdminController::$currentIndex.'&configure='.$this->name.'&addNewFeatureCategory'.
-            '&token='.Tools::getAdminTokenLite('AdminModules'),
-            'class' => 'process-icon-new'
-           )
-        );
-        return $helper->generateList($links, $field_list);
-    }
-
-    private function generateFeatureCategoriesListTest()
-    {
-        // Add Drag and Drop
-        $this->context->controller->addJqueryPlugin('tablednd');
-
-        if (version_compare(_PS_VERSION_, '1.6.0.11', '>=') === true) {
-            $this->context->controller->addJS(_PS_JS_DIR_.'admin/dnd.js');
-        } else {
-            $this->context->controller->addJS(_PS_JS_DIR_.'admin-dnd.js');
-        }
-        return $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
-    }
-
-    public function renderForm()
-    {
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
-                    'title' => $this->l('Category Feature'),
-                    'icon' => 'icon-envelope'
-                ),
-                'input' => array(
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Feature Category'),
-                        'name' => 'FEATURE_CATEGORY_NAME',
-                        'required' => true,
-                        'lang' => true
-                    ),
-                    array(
-                        'type' => 'hidden',
-                        'label' => 'none',
-                        'name' => 'CATEGORY_ID',
-                        'required' => false
-                    )
-                ),
-                'submit' => array(
-                    'title' => $this->l('Save'),
-                ),
-                'back' => array(
-                    'title' => $this->l('Back')
-                )
-            ),
-        );
-
-        $helper = new HelperForm();
-        $helper->show_toolbar = false;
-        $helper->class = 'FeatureCategory';
-        $helper->table = 'feature_category';
-        $helper->default_form_language = (int)Configuration::get('PS_LANG_DEFAULT');
-        $helper->languages = $this->context->controller->getLanguages();
-        $helper->allow_employee_form_lang = (int)Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ?
-        Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-        $helper->id = (int)Tools::getValue('id_feature_category');
-        $helper->identifier = 'id_feature_category';
-        $helper->submit_action = $this->name.'submitCategory';
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).
-        '&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->tpl_vars = array(
-            'fields_value' => $this->getConfigFieldsValues($helper->id),
-            'languages' => $this->context->controller->getLanguages(),
-            'id_language' => $this->context->language->id
-        );
-
-        return $helper->generateForm(array($fields_form));
-    }
-
-    public function getConfigFieldsValues($id_feature_category)
-    {
-        if ($id_feature_category) {
-
-            $data = Db::getInstance()->executeS(
-                'SELECT id_lang, name FROM '._DB_PREFIX_.'feature_category_lang
-                WHERE id_feature_category = '. $id_feature_category
-            );
-            
-            $result = array();
-            $result['CATEGORY_ID'] = $id_feature_category;
-            foreach (Language::getLanguages() as $lang) {
-                foreach ($data as $trans) {
-                    if ($trans['id_lang'] == $lang['id_lang']) {
-                        $result['FEATURE_CATEGORY_NAME'][$lang['id_lang']] = $trans['name'];
-                    }
-                }
-            }
-            return $result;
-        } else {
-            $result = array();
-            $result['CATEGORY_ID'] = $id_feature_category;
-            foreach (Language::getLanguages() as $lang) {
-                $result['FEATURE_CATEGORY_NAME'][$lang['id_lang']] = '';
-            }
-            return $result;
-        }
-        
+        return $this->html.$this->renderConfigurationForm();
     }
 
     public function renderConfigurationForm()
@@ -420,29 +290,6 @@ class ProductFeaturesCategories extends Module
 
     protected function postProcess()
     {
-        if (Tools::isSubmit($this->name.'submitCategory')) {
-            if (Tools::getValue('CATEGORY_ID')) {
-                $name = array();
-                foreach (Language::getLanguages(false) as $lang) {
-                    $name[$lang['id_lang']] = Tools::getValue('FEATURE_CATEGORY_NAME_'.$lang['id_lang']);
-                }
-                $FeatureCategory = new FeatureCategory((int)Tools::getValue('CATEGORY_ID'));
-                $FeatureCategory->name = $name;
-                $FeatureCategory->id_shop = Shop::getContextShopID();
-                $FeatureCategory->update();
-            } else {
-                $name = array();
-                foreach (Language::getLanguages(false) as $lang) {
-                    $name[$lang['id_lang']] = Tools::getValue('FEATURE_CATEGORY_NAME_'.$lang['id_lang']);
-                }
-                $FeatureCategory = new FeatureCategory();
-                $FeatureCategory->name = $name;
-                $FeatureCategory->position = 1;
-                $FeatureCategory->id_shop = Shop::getContextShopID();
-                $FeatureCategory->add();
-            }
-            
-        }
         if (Tools::isSubmit('submit'.$this->name.'configuration')) {
             Configuration::updateValue(
                 'PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER',
@@ -475,12 +322,12 @@ class ProductFeaturesCategories extends Module
     public function hookDisplayFooterProduct()
     {
         if (Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER')) {
-            $features = $this->getFrontFeatures($this->context->language->id, (int)Tools::getValue('id_product'));
+            $features = Product::getFrontFeaturesStatic($this->context->language->id, (int)Tools::getValue('id_product'));
             $this->context->smarty->assign(
                 array(
                     'style' => Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS'),
                     'features' => $features,
-                    'categories' => $this->getFeatureCategories($features)
+                    'categories' => $this->filterFeatureCategories($features)
                 )
             );
             return $this->display(__FILE__, 'product_features.tpl');
@@ -489,26 +336,7 @@ class ProductFeaturesCategories extends Module
         
     }
 
-    private function getFrontFeatures($id_lang, $id_product)
-    {
-
-        if (!Feature::isFeatureActive()) {
-            return array();
-        }
-        $features = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            'SELECT name, value, pf.id_feature, fl.category
-            FROM '._DB_PREFIX_.'feature_product pf
-            LEFT JOIN '._DB_PREFIX_.'feature_lang fl ON (fl.id_feature = pf.id_feature AND fl.id_lang = '.(int)$id_lang.')
-            LEFT JOIN '._DB_PREFIX_.'feature_value_lang fvl ON (fvl.id_feature_value = pf.id_feature_value AND fvl.id_lang = '.(int)$id_lang.')
-            LEFT JOIN '._DB_PREFIX_.'feature f ON (f.id_feature = pf.id_feature AND fl.id_lang = '.(int)$id_lang.')
-            '.Shop::addSqlAssociation('feature', 'f').'
-            WHERE pf.id_product = '.(int)$id_product.'
-            ORDER BY f.position ASC'
-        );
-        return $features;
-    }
-
-    private function getFeatureCategories($features)
+    private function filterFeatureCategories($features)
     {
         $categories = array();
         foreach ($features as $value) {

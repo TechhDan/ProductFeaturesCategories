@@ -26,28 +26,30 @@
 
 class Feature extends FeatureCore
 {
-    public $category;
+    public $category; 
 
     public static $definition = array(
         'table' => 'feature',
         'primary' => 'id_feature',
         'multilang' => true,
         'fields' => array(
-            'position' => array('type' => self::TYPE_INT, 'validate' => 'isInt'),
+            'position' => array(
+                'type' => self::TYPE_INT,
+                'validate' => 'isInt',
+            ),
             'name' => array(
                 'type' => self::TYPE_STRING,
                 'lang' => true,
                 'validate' => 'isGenericName',
                 'required' => true,
-                'size' => 128
+                'size' => 128,
             ),
             'category' => array(
-                'type' => self::TYPE_STRING,
-                'lang' => true,
-                'validate' => 'isGenericName',
+                'type' => self::TYPE_INT,
+                'validate' => 'isInt',
                 'required' => false,
-                'size' => 128
             ),
         ),
     );
+
 }

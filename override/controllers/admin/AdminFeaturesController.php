@@ -34,7 +34,6 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
         $this->list_id = 'feature';
         $this->identifier = 'id_feature';
         $this->lang = true;
-
         $this->fields_list = array(
             'id_feature' => array(
                 'title' => $this->l('ID'),
@@ -60,13 +59,13 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
                 'class' => 'fixed-width-xs',
                 'position' => 'position'
             ),
-            'category' => array(
-                'title' => $this->l('Category'),
+            'category_name' => array(
+                'title' => $this->l('Feature Category'),
                 'width' => 'auto',
                 'class' => 'fixed-width-xs',
+                'filter_key' => 'fcl!name'
             )
         );
-
         $this->bulk_actions = array(
             'delete' => array(
                 'text' => $this->l('Delete selected'),
@@ -75,28 +74,16 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
             )
         );
         AdminController::__construct();
+
+        $this->_select = 'fcl.`name` as category_name';
+        $this->_join = 'LEFT JOIN `'._DB_PREFIX_.'feature_category_lang` fcl
+            ON (fcl.`id_feature_category` = a.`category` AND fcl.`id_lang` = '.(int)$this->context->language->id.')';
     }
 
     public function renderForm()
     {
-        $links = Db::getInstance()->ExecuteS('
-            SELECT `category_name` FROM '._DB_PREFIX_.'productfeaturescategories
-        ');
-        if (Tools::getValue('id_feature')) {
-            $default = Db::getInstance()->ExecuteS(
-                'SELECT `category` FROM '._DB_PREFIX_.'feature_lang
-                WHERE id_feature = ' . (int)Tools::getValue('id_feature')
-            );
-            if ($default[0]['category'] == null || $default[0]['category'] == 'Default') {
-                array_unshift($links, array('category_name' => 'Default'));
-            } else {
-                $links = array_merge(array(array('category_name' => $default[0]['category'])), $links);
-                $links = array_merge($links, array(array('category_name' => 'Default')));
-                $links = array_unique($links, SORT_REGULAR);
-            }
-        } else {
-            array_unshift($links, array('category_name' => 'Default'));
-        }
+        $links = $this->getQueryLinks($this->context->employee->id_lang);
+
         $this->toolbar_title = $this->l('Add a new feature');
         $this->fields_form = array(
             'legend' => array(
@@ -115,13 +102,13 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
                 ),
                 array(
                     'type' => 'select',
-                    'label' => $this->l('Category'),
+                    'label' => $this->l('Feature Category'),
                     'name' => 'category',
                     'lang' => true,
                     'options' => array(
                         'query' => $links,
-                        'name' => 'category_name',
-                        'id' => 'category_name'
+                        'name' => 'name',
+                        'id' => 'id_feature_category'
                     )
                 ),
             )
@@ -137,5 +124,36 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
             'title' => $this->l('Save'),
         );
         return AdminController::renderForm();
+    }
+
+    private function getQueryLinks($id_lang)
+    {
+        $links = Db::getInstance()->ExecuteS(
+            'SELECT `name`, `id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang`
+            WHERE id_lang = '.(int)$id_lang
+        );
+
+        if (Tools::getValue('id_feature') && (int)Tools::getValue('id_feature') > 0) {
+            $default = Db::getInstance()->ExecuteS(
+                'SELECT category FROM '._DB_PREFIX_.'feature
+                WHERE id_feature = ' . (int)Tools::getValue('id_feature')
+            );
+            if ($default) {
+                $default = (int)$default[0]['category'];
+            } else {
+                return $links;
+            }
+        } else {
+            return $links;
+        }
+        $rearranged = array();
+        foreach($links as $key => $link) {
+            if ($default === (int)$link['id_feature_category']) {
+                array_unshift($links, array('name' => $link['name'], 'id_feature_category' => $link['id_feature_category']));
+                array_splice($links, $key + 1, 1);
+            }
+        }
+
+        return $links;
     }
 }

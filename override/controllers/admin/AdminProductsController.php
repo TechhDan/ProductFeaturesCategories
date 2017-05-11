@@ -23,9 +23,9 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of WebDevOverture
 */
-
 class AdminProductsController extends AdminProductsControllerCore
 {
+
     public function initFormFeatures($obj)
     {
         if (!$this->default_form_language) {
@@ -75,7 +75,7 @@ class AdminProductsController extends AdminProductsControllerCore
                             }
                         }
                     }
-                    $custom_feature_categories = $this->getCustomFeatureCategories();
+                    $custom_feature_categories = $this->getCustomFeatureCategories((int)$this->context->language->id);
                     $data->assign('custom_feature_categories', $custom_feature_categories);
                     $data->assign('available_features', $features);
                     $data->assign('product', $obj);
@@ -91,18 +91,14 @@ class AdminProductsController extends AdminProductsControllerCore
         $this->tpl_form_vars['custom_form'] = $data->fetch();
     }
 
-    public function getCustomFeatureCategories()
+    public function getCustomFeatureCategories($id_lang)
     {
-        $id_lang = (int)$this->context->language->id;
-        $id_shop = (int)$this->context->shop->id;
-
         $sql = Db::getInstance()->ExecuteS(
-            'SELECT '._DB_PREFIX_.'feature_category_lang.`name`, '._DB_PREFIX_.'feature_category.`id_feature_category`
-            FROM `'._DB_PREFIX_.'feature_category` fc
-            INNER JOIN `'._DB_PREFIX_.'feature_category_lang` fcl ON fc.`id_feature_category` = fcl.`id_feature_category`
-            WHERE fcl.`id_lang` = '.$id_lang.' AND fc.`id_shop` = '.$id_shop
+            'SELECT fcl.`name`, fcl.`id_feature_category`
+            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.id_feature_category = fcl.id_feature_category
+            WHERE fcl.`id_lang` = '.$id_lang.' ORDER BY fc.`position`'
         );
-
         return $sql;
     }
 }

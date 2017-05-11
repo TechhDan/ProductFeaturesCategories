@@ -67,20 +67,18 @@ class FeatureCategory extends ObjectModel
 
     public static function getLastPosition()
     {
-        $sql = '
-        SELECT MAX(position) + 1
-        FROM `'._DB_PREFIX_.'feature_category`';
+        $sql = 'SELECT MAX(position) + 1 FROM `'._DB_PREFIX_.'feature_category`';
 
         return Db::getInstance()->getValue($sql);
     }
 
     public function updatePosition($way, $position)
     {
-        if (!$res = Db::getInstance()->executeS('
-            SELECT fc.`id_feature_category`, fc.`position`
+        if (!$res = Db::getInstance()->executeS(
+            'SELECT fc.`id_feature_category`, fc.`position`
             FROM `'._DB_PREFIX_.'feature_category` fc
-            ORDER BY fc.`position` ASC
-        ')) {
+            ORDER BY fc.`position` ASC'
+        )) {
             return false;
         }
 
@@ -112,16 +110,13 @@ class FeatureCategory extends ObjectModel
 
     public static function cleanPositions()
     {
-        $sql = '
-            SELECT `id_feature_category`
+        $sql = 'SELECT `id_feature_category`
             FROM `'._DB_PREFIX_.'feature_category`
-            ORDER BY `position`
-        ';
+            ORDER BY `position`';
         $result = Db::getInstance()->executeS($sql);
 
         for ($i = 0, $total = count($result); $i < $total; ++$i) {
-            $sql = '
-                UPDATE `'._DB_PREFIX_.'feature_category`
+            $sql = 'UPDATE `'._DB_PREFIX_.'feature_category`
                 SET `position` = ' .(int)$i.'
                 WHERE `id_feature_category` = '.(int)$result[$i]['id_feature_category'];
             Db::getInstance()->execute($sql);
@@ -129,7 +124,7 @@ class FeatureCategory extends ObjectModel
         return true;
     }
 
-    public static function getFeatureCategories()
+    public static function getFeatureCategoriesLinks()
     {
         $id_lang = (int)Context::getContext()->language->id;
         $id_shop = (int)Context::getContext()->shop->id;

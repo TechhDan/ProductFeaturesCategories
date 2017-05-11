@@ -29,6 +29,7 @@
 <p>
 	{l s='This module allows you to organize your features into categories for easier management.' mod='productfeaturescategories'}<br>
 <ol style="margin-left: 80px; margin-top: 5px">
+	<li>{l s='Head over to the Catalog -> Product Feature Categories'}
 	<li>{l s='Create a category for your features' mod='productfeaturescategories'}</li>
 	<li>{l s='In the catalog features page assign each feature to a pre-defined category' mod='productfeaturescategories'}</li>
 </ol>

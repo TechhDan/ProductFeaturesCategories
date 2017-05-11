@@ -62,7 +62,11 @@ function toggleFeatures(target) {
 					<td colspan="3"><a class="btn btn-primary" onClick="toggleFeatures('hide_{$custom_category['name']|replace:' ':'_'|escape:'htmlall':'UTF-8'}')" href="#" style="display: block; width: 100%">{$custom_category['name']|escape:'htmlall':'UTF-8'}</button></td>
 				</tr>
 				{foreach from=$available_features item=available_feature}
-				{if $available_feature.category == $custom_category['id_feature_category']}
+				{if ($available_feature.category == $custom_category['id_feature_category'])
+				OR (
+					($available_feature.category == 0 AND $custom_category['id_feature_category'] == 1) ||
+					($available_feature.category == null AND $custom_category['id_feature_category'] == 1)
+				)}
 				<tr>
 					<td class="hide_{$custom_category['name']|replace:' ':'_'|escape:'htmlall':'UTF-8'}">{$available_feature.name|escape:'htmlall':'UTF-8'}</td>
 					<td class="hide_{$custom_category['name']|replace:' ':'_'|escape:'htmlall':'UTF-8'}">
@@ -150,101 +154,7 @@ function toggleFeatures(target) {
 				</tr>
 				{/foreach}
 
-			{/foreach}
-
-			<!--******************** Default ********************-->
-			<tr>
-				<td colspan="3"><a class="btn btn-primary" onClick="toggleFeatures('hide_default')" href="#" style="display: block; width: 100%">Default</a></td>
-			</tr>
-			{foreach from=$available_features item=available_feature}
-			{if $available_feature.category == Null || $available_feature.category == 0}
-			<tr>
-				<td class="hide_default">{$available_feature.name|escape:'htmlall':'UTF-8'}</td>
-				<td class="hide_default">
-				{if sizeof($available_feature.featureValues)}
-					<select id="feature_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_value" name="feature_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_value"
-						onchange="$('.custom_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_').val('');">
-						<option value="0">---</option>
-						{foreach from=$available_feature.featureValues item=value}
-						<option value="{$value.id_feature_value|escape:'htmlall':'UTF-8'}"{if $available_feature.current_item == $value.id_feature_value}selected="selected"{/if} >
-							{$value.value|truncate:40|escape:'htmlall':'UTF-8'}
-						</option>
-						{/foreach}
-					</select>
-				{else}
-					<input type="hidden" name="feature_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_value" value="0" />
-					<span>{l s='N/A' mod='productfeaturescategories'} -
-						<a href="{$link->getAdminLink('AdminFeatures')|escape:'html':'UTF-8'}&amp;addfeature_value&amp;id_feature={$available_feature.id_feature|escape:'htmlall':'UTF-8'}"
-					 	class="confirm_leave btn btn-link"><i class="icon-plus-sign"></i> {l s='Add pre-defined values first' mod='productfeaturescategories'} <i class="icon-external-link-sign"></i></a>
-					</span>
-				{/if}
-				</td>
-				<td class="hide_default">
-
-				<div class="row lang-0" style='display: none;'>
-					<div class="col-lg-9">
-						<textarea class="custom_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_ALL textarea-autosize"	name="custom_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_ALL"
-								cols="40" style='background-color:#CCF'	rows="1" onkeyup="{foreach from=$languages key=k item=language}$('.custom_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_{$language.id_lang|escape:'htmlall':'UTF-8'}').val($(this).val());{/foreach}" >{$available_feature.val[1].value|escape:'html':'UTF-8'|default:""}</textarea>
-
-					</div>
-					{if $languages|count > 1}
-						<div class="col-lg-3">
-							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-										{l s='ALL' mod='productfeaturescategories'}
-								<span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu">
-								{foreach from=$languages item=language}
-									<li>
-										<a href="javascript:void(0);" onclick="restore_lng($(this),{$language.id_lang|escape:'htmlall':'UTF-8'});">{$language.iso_code|escape:'htmlall':'UTF-8'}</a>
-									</li>
-								{/foreach}
-							</ul>
-						</div>
-					{/if}
-				</div>
-
-				{foreach from=$languages key=k item=language}
-					{if $languages|count > 1}
-					<div class="row translatable-field lang-{$language.id_lang|escape:'htmlall':'UTF-8'}">
-						<div class="col-lg-9">
-						{/if}
-						<textarea
-								class="custom_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_{$language.id_lang|escape:'htmlall':'UTF-8'} textarea-autosize"
-								name="custom_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_{$language.id_lang|escape:'htmlall':'UTF-8'}"
-								cols="40"
-								rows="1"
-								onkeyup="if (isArrowKey(event)) return ;$('#feature_{$available_feature.id_feature|escape:'htmlall':'UTF-8'}_value').val(0);" >{$available_feature.val[$language.id_lang].value|escape:'html':'UTF-8'|default:""}</textarea>
-
-					{if $languages|count > 1}
-						</div>
-						<div class="col-lg-3">
-							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-								{$language.iso_code|escape:'htmlall':'UTF-8'}
-								<span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu">
-								<li><a href="javascript:void(0);" onclick="all_languages($(this));">{l s='ALL' mod='productfeaturescategories'}</a></li>
-								{foreach from=$languages item=language}
-								<li>
-									<a href="javascript:hideOtherLanguage({$language.id_lang|escape:'htmlall':'UTF-8'});">{$language.iso_code|escape:'htmlall':'UTF-8'}</a>
-								</li>
-								{/foreach}
-							</ul>
-						</div>
-					</div>
-					{/if}
-					{/foreach}
-				</td>
-
-			</tr>
-			{/if}
-			{foreachelse}
-			<tr>
-				<td colspan="3" style="text-align:center;"><i class="icon-warning-sign"></i> {l s='No features have been defined' mod='productfeaturescategories'}</td>
-			</tr>
-			{/foreach}
-		
+			{/foreach}		
 		
 		</tbody>
 	</table>
