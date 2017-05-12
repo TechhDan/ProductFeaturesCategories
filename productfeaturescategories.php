@@ -73,10 +73,13 @@ class ProductFeaturesCategories extends Module
     public function installFixture()
     {
         $Fixture = new FeatureCategory();
+        // Languages
         $languages = Language::getLanguages();
         foreach ($languages as $language) {
             $Fixture->name[$language['id_lang']] = 'Default';
         }
+        // Shops
+        Shop::addTableAssociation($Fixture::$definition['table'], array('type' => 'shop'));
         if ($Fixture->add()) {
             return true;
         }

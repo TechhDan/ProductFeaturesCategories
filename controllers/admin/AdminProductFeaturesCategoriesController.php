@@ -74,13 +74,13 @@ class AdminProductFeaturesCategoriesController extends ModuleAdminController
             )
         );
 
-        /*if (Shop::isFeatureActive()) {
+        if (Shop::isFeatureActive()) {
             $this->fields_form['input'][] = array(
                 'type' => 'shop',
                 'label' => $this->l('Shop association'),
                 'name' => 'checkBoxShopAsso',
             );
-        }*/
+        }
 
         $this->fields_form['submit'] = array(
             'title' => $this->l('Save'),
@@ -98,7 +98,7 @@ class AdminProductFeaturesCategoriesController extends ModuleAdminController
      */
     public function init()
     {
-        //Shop::addTableAssociation($this->table, array('type' => 'shop'));
+        Shop::addTableAssociation($this->table, array('type' => 'shop'));
         return parent::init();
     }
 

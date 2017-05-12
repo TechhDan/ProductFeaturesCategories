@@ -37,6 +37,7 @@ class FeatureCategory extends ObjectModel
         'table' => 'feature_category',
         'primary' => 'id_feature_category',
         'multilang' => true,
+        'multishop'=> true,
         'fields' => array(
             'position' => array('type' => self::TYPE_INT, 'validate' => 'isInt'),
             'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128),
