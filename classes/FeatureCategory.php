@@ -124,18 +124,25 @@ class FeatureCategory extends ObjectModel
         return true;
     }
 
-    public static function getFeatureCategoriesLinks()
+    public static function getFeatureCategories($categories, $id_lang)
     {
-        $id_lang = (int)Context::getContext()->language->id;
-        $id_shop = (int)Context::getContext()->shop->id;
-
         $feature_categories = Db::getInstance()->ExecuteS(
-            'SELECT fcl.`name`, fc.`id_feature_category`, fc.`position`
-            FROM `'._DB_PREFIX_.'feature_category` fc
-            INNER JOIN `'._DB_PREFIX_.'feature_category_lang` fcl ON fc.`id_feature_category` = fcl.`id_feature_category`
-            WHERE fcl.`id_lang` = '.$id_lang.' AND fc.`id_shop` = '.$id_shop
+            'SELECT fcl.`name`, fcl.`id_feature_category`
+            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.`id_feature_category` = fcl.`id_feature_category`
+            WHERE fcl.`id_lang` = '.$id_lang.' AND fcl.`id_feature_category` IN ('.implode(', ', $categories).') 
+            ORDER BY fc.`position`'
         );
 
         return $feature_categories;
+    }
+
+    public static function getFeatureCategoryByFeatureId($feature_id)
+    {
+        $sql = Db::getInstance()->getValue(
+            'SELECT `category` FROM `'._DB_PREFIX_.'feature` fc
+            WHERE `id_feature` = '.(int)$feature_id
+        );
+        return $sql;
     }
 }

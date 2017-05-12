@@ -24,48 +24,24 @@
 *}
 {if $features}
 	{if $style}
-	<h3 class="page-product-heading">{l s='Data sheet' mod='productfeaturescategories'}</h3>
 	<!-- Tabs style -->
+	<h3 class="page-product-heading">{l s='Data sheet' mod='productfeaturescategories'}</h3>
 	<section class="page-product-box">
 		<ul class="nav nav-tabs">
-			{foreach from=$categories key=i item=category}
-				{if $category == 'Default'}
-					<li {if $i == 0}class="active"{/if}>
-						<a data-toggle="tab" href="#dynamic_tabs_default">{l s='General' mod='productfeaturescategories'}</a>
-					</li>
-				{else}
-					<li {if $i == 0}class="active"{/if}>
-						<a data-toggle="tab" href="#dynamic_tabs_{$category|replace:' ':'_'|escape:'html':'UTF-8'}">{$category|escape:'html':'UTF-8'}</a>
-					</li>
-				{/if}
+			{foreach from=$fc_categories key=i item=fc_category}
+				<li {if $i == 0}class="active"{/if}>
+					<a data-toggle="tab" href="#dynamic_tabs_{$fc_category.id_feature_category|escape:'html':'UTF-8'}">{$fc_category.name|escape:'html':'UTF-8'}</a>
+				</li>
 			{/foreach}
 		</ul>
 
 		<div class="tab-content">
-			<!-- Default -->
-			{foreach from=$categories key=i item=category}
-				{if $category == 'Default'}
-			<div id="dynamic_tabs_default" class="tab-pane fade in {if $i == 0}active{/if}">
-				<table class="table-data-sheet">
-					{foreach from=$features item=feature}
-						{if $feature.category == null || $feature.category == '' || $feature.category == 'Default'}
-							<tr class="{cycle values="odd, even"}">
-								<td>{$feature.name|escape:'html':'UTF-8'}</td>
-								<td>{$feature.value|escape:'html':'UTF-8'}</td>
-							</tr>
-						{/if}
-					{/foreach}
-				</table>
-			</div>
-				{/if}
-			{/foreach}
-
 			<!-- Loop -->
-			{foreach from=$categories key=i item=category}
-				<div id="dynamic_tabs_{$category|replace:' ':'_'|escape:'html':'UTF-8'}" class="tab-pane fade in {if $i == 0}active{/if}">
+			{foreach from=$fc_categories key=i item=fc_category}
+				<div id="dynamic_tabs_{$fc_category.id_feature_category|escape:'html':'UTF-8'}" class="tab-pane fade in {if $i == 0}active{/if}">
 					<table class="table-data-sheet">
 						{foreach from=$features item=feature}
-							{if $feature.category == $category && $feature.category != 'Default'}
+							{if $feature.id_feature_category == $fc_category.id_feature_category}
 								<tr class="{cycle values="odd, even"}">
 									<td>{$feature.name|escape:'html':'UTF-8'}</td>
 									<td>{$feature.value|escape:'html':'UTF-8'}</td>
@@ -83,38 +59,19 @@
 	<section class="page-product-box">
 		<h3 class="page-product-heading">{l s='Data sheet' mod='productfeaturescategories'}</h3>
 		<table class="table-data-sheet">
-			<!-- Default -->
-			{foreach from=$categories item=category}
-				{if $category == 'Default'}
-					<tr>
-						<th colspan="2" id="pfc_table_body"><strong>{l s='General' mod='productfeaturescategories'}</strong></th>
-					</tr>
-				{/if}
-			{/foreach}
-			{foreach from=$features item=feature}
-				{if $feature.category == null || $feature.category == '' || $feature.category == 'Default'}
-					<tr class="{cycle values="odd, even"}">
-						<td>{$feature.name|escape:'html':'UTF-8'}</td>
-						<td>{$feature.value|escape:'html':'UTF-8'}</td>
-					</tr>
-				{/if}
-			{/foreach}
-
 			<!-- Custom Categories -->
-			{foreach from=$categories item=category}
-				{if $category != 'Default'}
-					<tr>
-						<th colspan="2" id="pfc_table_header"><strong>{$category|escape:'html':'UTF-8'}</strong></th>
-					</tr>
-					{foreach from=$features item=feature}
-						{if $feature.category == $category}
-							<tr class="{cycle values="odd, even"}">
-								<td>{$feature.name|escape:'html':'UTF-8'}</td>
-								<td>{$feature.value|escape:'html':'UTF-8'}</td>
-							</tr>
-						{/if}
-					{/foreach}
-				{/if}
+			{foreach from=$fc_categories item=fc_category}
+				<tr>
+					<th colspan="2" id="pfc_table_header"><strong>{$fc_category.name|escape:'html':'UTF-8'}</strong></th>
+				</tr>
+				{foreach from=$features item=feature}
+					{if $feature.id_feature_category == $fc_category.id_feature_category}
+						<tr class="{cycle values="odd, even"}">
+							<td>{$feature.name|escape:'html':'UTF-8'}</td>
+							<td>{$feature.value|escape:'html':'UTF-8'}</td>
+						</tr>
+					{/if}
+				{/foreach}
 			{/foreach}
 		</table>
 	</section>

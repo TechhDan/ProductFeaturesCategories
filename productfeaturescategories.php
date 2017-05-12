@@ -322,12 +322,15 @@ class ProductFeaturesCategories extends Module
     public function hookDisplayFooterProduct()
     {
         if (Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER')) {
-            $features = Product::getFrontFeaturesStatic($this->context->language->id, (int)Tools::getValue('id_product'));
+            $features = $this->addFeatureCategories(
+                Product::getFrontFeaturesStatic($this->context->language->id, (int)Tools::getValue('id_product'))
+            );
+            $categories = $this->getAssocFeatureCategories($features);
             $this->context->smarty->assign(
                 array(
                     'style' => Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS'),
                     'features' => $features,
-                    'categories' => $this->filterFeatureCategories($features)
+                    'fc_categories' => $categories
                 )
             );
             return $this->display(__FILE__, 'product_features.tpl');
@@ -336,23 +339,26 @@ class ProductFeaturesCategories extends Module
         
     }
 
-    private function filterFeatureCategories($features)
+    private function getAssocFeatureCategories($features)
     {
         $categories = array();
-        foreach ($features as $value) {
-            if ($value['category'] != null) {
-                $categories[] = $value['category'];
-            } elseif ($value['category'] == null || $value['category'] == '') {
-                $categories[] = 'Default';
-            }
+        foreach ($features as $feature) {
+            $categories[] = (int)$feature['id_feature_category'];
         }
-        $categories = array_values(array_unique($categories));
-        for ($x = 0; $x < count($categories); $x++) {
-            if ($categories[$x] == 'Default') {
-                unset($categories[$x]);
-                array_unshift($categories, 'Default');
+        if (!empty($categories)) {
+            $categories = FeatureCategory::getFeatureCategories(array_unique($categories), $this->context->language->id);
+            foreach ($categories as &$category) {
+                $category['id_feature_category'] = (int)$category['id_feature_category'];
             }
         }
         return $categories;
+    }
+
+    private function addFeatureCategories($features)
+    {
+        foreach ($features as &$feature) {
+                $feature['id_feature_category'] = (int)FeatureCategory::getFeatureCategoryByFeatureId($feature['id_feature']);
+        }
+        return $features;
     }
 }

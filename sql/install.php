@@ -25,7 +25,7 @@
 */
 $sql = array();
 
-$sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature` ADD category INT(10) UNSIGNED DEFAULT 0';
+$sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature` ADD category INT(10) UNSIGNED DEFAULT 1';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'feature_category` (
     `id_feature_category` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
