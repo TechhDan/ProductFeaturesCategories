@@ -23,10 +23,13 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of WebDevOverture
 */
-
 class AdminFeaturesController extends AdminFeaturesControllerCore
 {
-
+    /*
+    * module: productfeaturescategories
+    * date: 2017-05-12 16:02:01
+    * version: 1.0.4
+    */
     public function __construct()
     {
         $this->table = 'feature';
@@ -74,16 +77,18 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
             )
         );
         AdminController::__construct();
-
         $this->_select = 'fcl.`name` as category_name';
         $this->_join = 'LEFT JOIN `'._DB_PREFIX_.'feature_category_lang` fcl
             ON (fcl.`id_feature_category` = a.`category` AND fcl.`id_lang` = '.(int)$this->context->language->id.')';
     }
-
+    /*
+    * module: productfeaturescategories
+    * date: 2017-05-12 16:02:01
+    * version: 1.0.4
+    */
     public function renderForm()
     {
         $links = $this->getQueryLinks($this->context->employee->id_lang);
-
         $this->toolbar_title = $this->l('Add a new feature');
         $this->fields_form = array(
             'legend' => array(
@@ -125,14 +130,30 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
         );
         return AdminController::renderForm();
     }
-
+    /*
+    * module: productfeaturescategories
+    * date: 2017-05-12 16:02:01
+    * version: 1.0.4
+    */
     private function getQueryLinks($id_lang)
     {
-        $links = Db::getInstance()->ExecuteS(
-            'SELECT `name`, `id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang`
-            WHERE id_lang = '.(int)$id_lang
-        );
-
+        if (Shop::getContext() === Shop::CONTEXT_ALL) {
+            $links = Db::getInstance()->ExecuteS(
+                'SELECT `name`, `id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang`
+                WHERE id_lang = '.(int)$id_lang
+            );
+        } elseif (Shop::getContext() === Shop::CONTEXT_GROUP) {
+            $shops = ShopGroup::getShopsFromGroup($this->context->shop->id_shop_group);
+            foreach ($shops as $key => &$shop) {
+                $shops[$key] = (int)$shop['id_shop'];
+            }
+            $links = Db::getInstance()->ExecuteS(
+                'SELECT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+                LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcs ON fcs.`id_feature_category` = fcl.
+                WHERE id_lang = '.(int)$id_lang
+            );
+        }
+        
         if (Tools::getValue('id_feature') && (int)Tools::getValue('id_feature') > 0) {
             $default = Db::getInstance()->ExecuteS(
                 'SELECT category FROM '._DB_PREFIX_.'feature
@@ -153,7 +174,6 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
                 array_splice($links, $key + 1, 1);
             }
         }
-
         return $links;
     }
 }
