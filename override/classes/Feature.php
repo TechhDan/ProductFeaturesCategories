@@ -52,4 +52,13 @@ class Feature extends FeatureCore
         ),
     );
 
+    public static function getCategoryIdByFeatureId($id_feature)
+    {
+        $id_category = Db::getInstance()->getValue(
+            'SELECT category FROM '._DB_PREFIX_.'feature
+            WHERE id_feature = ' . (int)$id_feature
+        );
+        return $id_category;
+    }
+
 }

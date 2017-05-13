@@ -146,4 +146,47 @@ class FeatureCategory extends ObjectModel
         );
         return $sql;
     }
+
+    public static function getCategoryNamesAndIdsAll($id_lang)
+    {
+        $sql = Db::getInstance()->ExecuteS(
+            'SELECT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.`id_feature_category` = fcl.`id_feature_category`
+            WHERE id_lang = '.(int)$id_lang.' ORDER BY fc.`position`'
+        );
+        return $sql;
+    }
+
+    public static function getCategoryNamesAndIdsGroup($id_lang, $shops)
+    {
+        $sql = Db::getInstance()->ExecuteS(
+            'SELECT DISTINCT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcp ON fcp.`id_feature_category` = fcl.`id_feature_category`
+            LEFT JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.`id_feature_category` = fcl.`id_feature_category`
+            WHERE id_lang = '.(int)$id_lang.' AND fcp.`id_shop` IN ('.implode(', ', $shops).')
+            ORDER BY fc.`position`'
+        );
+        return $sql;
+    }
+
+    public static function getCategoryNamesAndIdsShop($id_lang, $id_shop)
+    {
+        $sql = Db::getInstance()->ExecuteS(
+            'SELECT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcp ON fcp.`id_feature_category` = fcl.`id_feature_category`
+            WHERE id_lang = '.(int)$id_lang.' AND fcp.`id_shop` = '.(int)$id_shop
+        );
+        return $sql;
+    }
+
+    public static function getCustomFeatureCategories($id_lang)
+    {
+        $sql = Db::getInstance()->ExecuteS(
+            'SELECT fcl.`name`, fcl.`id_feature_category`
+            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.id_feature_category = fcl.id_feature_category
+            WHERE fcl.`id_lang` = '.(int)$id_lang.' ORDER BY fc.`position`'
+        );
+        return $sql;
+    }
 }

@@ -32,5 +32,6 @@
 	<li>{l s='Head over to the Catalog -> Product Feature Categories'}
 	<li>{l s='Create a category for your features' mod='productfeaturescategories'}</li>
 	<li>{l s='In the catalog features page assign each feature to a pre-defined category' mod='productfeaturescategories'}</li>
+	<li>{l s='** Do not delete default feature category id 1 ** Rename it if you must'}</li>
 </ol>
 </div>

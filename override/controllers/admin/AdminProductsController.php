@@ -25,7 +25,6 @@
 */
 class AdminProductsController extends AdminProductsControllerCore
 {
-
     public function initFormFeatures($obj)
     {
         if (!$this->default_form_language) {
@@ -75,7 +74,10 @@ class AdminProductsController extends AdminProductsControllerCore
                             }
                         }
                     }
-                    $custom_feature_categories = $this->getCustomFeatureCategories((int)$this->context->language->id);
+                    $custom_feature_categories = $this->removeEmptyFC(
+                        FeatureCategory::getCustomFeatureCategories((int)$this->context->language->id),
+                        $features
+                    );
                     $data->assign('custom_feature_categories', $custom_feature_categories);
                     $data->assign('available_features', $features);
                     $data->assign('product', $obj);
@@ -91,14 +93,22 @@ class AdminProductsController extends AdminProductsControllerCore
         $this->tpl_form_vars['custom_form'] = $data->fetch();
     }
 
-    public function getCustomFeatureCategories($id_lang)
+    public function removeEmptyFC($feature_categories, $features)
     {
-        $sql = Db::getInstance()->ExecuteS(
-            'SELECT fcl.`name`, fcl.`id_feature_category`
-            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
-            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.id_feature_category = fcl.id_feature_category
-            WHERE fcl.`id_lang` = '.$id_lang.' ORDER BY fc.`position`'
-        );
-        return $sql;
+        // Get features on list
+        $fc_array = array();
+        foreach ($features as $feature) {
+            $fc_array[] = (int)$feature['category'];
+        }
+        $fc_array = array_unique($fc_array);
+
+        // Remove empty feature categories
+        foreach ($feature_categories as $key => $feature_category) {
+            if (!in_array((int)$feature_category['id_feature_category'], $fc_array)) {
+                unset($feature_categories[$key]);
+            }
+        }
+        return $feature_categories;
     }
+
 }

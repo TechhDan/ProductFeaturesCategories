@@ -57,7 +57,6 @@ class ProductFeaturesCategories extends Module
         Configuration::updateValue('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS', true);
 
         $install = include(dirname(__FILE__).'/sql/install.php');
-        $install = true;
 
         return $install &&
             $this->installFixture() &&
