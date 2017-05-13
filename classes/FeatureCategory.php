@@ -40,13 +40,19 @@ class FeatureCategory extends ObjectModel
         'multishop'=> true,
         'fields' => array(
             'position' => array('type' => self::TYPE_INT, 'validate' => 'isInt'),
-            'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128),
+            'name' => array(
+                'type' => self::TYPE_STRING,
+                'lang' => true,
+                'validate' => 'isGenericName',
+                'required' => true,
+                'size' => 128
+            ),
         ),
     );
 
-    public function add($autodate = true, $null_values = false)
+    public function add($autodate = true)
     {
-        $this->position = self::getLastPosition(); 
+        $this->position = self::getLastPosition();
         return parent::add($autodate, true);
     }
 
@@ -83,7 +89,7 @@ class FeatureCategory extends ObjectModel
             return false;
         }
 
-        foreach($res as $feature_category) {
+        foreach ($res as $feature_category) {
             if ((int)$feature_category['id_feature_category'] == (int)$this->id) {
                 $moved_fc = $feature_category;
             }
@@ -93,18 +99,19 @@ class FeatureCategory extends ObjectModel
             return false;
         }
 
-        $result = Db::getInstance()->execute('
-            UPDATE `'._DB_PREFIX_.'feature_category`
+        $result = Db::getInstance()->execute(
+            'UPDATE `'._DB_PREFIX_.'feature_category`
             SET `position`= `position` '.($way ? '- 1' : '+ 1').'
             WHERE `position` '.($way ? '> '.(int)$moved_fc['position'].
             ' AND `position` <= '.(int)$position : '< '.(int)$moved_fc['position'].
             ' AND `position` >= '.(int)$position)
         );
 
-        $result &= Db::getInstance()->execute('
-            UPDATE `'._DB_PREFIX_.'feature_category`
+        $result &= Db::getInstance()->execute(
+            'UPDATE `'._DB_PREFIX_.'feature_category`
             SET `position` = '.(int)$position.'
-            WHERE `id_feature_category` = '.(int)$moved_fc['id_feature_category']);
+            WHERE `id_feature_category` = '.(int)$moved_fc['id_feature_category']
+        );
 
         return $result;
     }
@@ -130,7 +137,8 @@ class FeatureCategory extends ObjectModel
         $feature_categories = Db::getInstance()->ExecuteS(
             'SELECT fcl.`name`, fcl.`id_feature_category`
             FROM `'._DB_PREFIX_.'feature_category_lang` fcl
-            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.`id_feature_category` = fcl.`id_feature_category`
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc
+            ON fc.`id_feature_category` = fcl.`id_feature_category`
             WHERE fcl.`id_lang` = '.$id_lang.' AND fcl.`id_feature_category` IN ('.implode(', ', $categories).') 
             ORDER BY fc.`position`'
         );
@@ -150,8 +158,10 @@ class FeatureCategory extends ObjectModel
     public static function getCategoryNamesAndIdsAll($id_lang)
     {
         $sql = Db::getInstance()->ExecuteS(
-            'SELECT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
-            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.`id_feature_category` = fcl.`id_feature_category`
+            'SELECT fcl.`name`, fcl.`id_feature_category`
+            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc
+            ON fc.`id_feature_category` = fcl.`id_feature_category`
             WHERE id_lang = '.(int)$id_lang.' ORDER BY fc.`position`'
         );
         return $sql;
@@ -160,9 +170,12 @@ class FeatureCategory extends ObjectModel
     public static function getCategoryNamesAndIdsGroup($id_lang, $shops)
     {
         $sql = Db::getInstance()->ExecuteS(
-            'SELECT DISTINCT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
-            LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcp ON fcp.`id_feature_category` = fcl.`id_feature_category`
-            LEFT JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.`id_feature_category` = fcl.`id_feature_category`
+            'SELECT DISTINCT fcl.`name`, fcl.`id_feature_category`
+            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcp
+            ON fcp.`id_feature_category` = fcl.`id_feature_category`
+            LEFT JOIN `'._DB_PREFIX_.'feature_category` fc
+            ON fc.`id_feature_category` = fcl.`id_feature_category`
             WHERE id_lang = '.(int)$id_lang.' AND fcp.`id_shop` IN ('.implode(', ', $shops).')
             ORDER BY fc.`position`'
         );
@@ -173,7 +186,8 @@ class FeatureCategory extends ObjectModel
     {
         $sql = Db::getInstance()->ExecuteS(
             'SELECT fcl.`name`, fcl.`id_feature_category` FROM `'._DB_PREFIX_.'feature_category_lang` fcl
-            LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcp ON fcp.`id_feature_category` = fcl.`id_feature_category`
+            LEFT JOIN `'._DB_PREFIX_.'feature_category_shop` fcp
+            ON fcp.`id_feature_category` = fcl.`id_feature_category`
             WHERE id_lang = '.(int)$id_lang.' AND fcp.`id_shop` = '.(int)$id_shop
         );
         return $sql;
@@ -184,7 +198,8 @@ class FeatureCategory extends ObjectModel
         $sql = Db::getInstance()->ExecuteS(
             'SELECT fcl.`name`, fcl.`id_feature_category`
             FROM `'._DB_PREFIX_.'feature_category_lang` fcl
-            INNER JOIN `'._DB_PREFIX_.'feature_category` fc ON fc.id_feature_category = fcl.id_feature_category
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc
+            ON fc.id_feature_category = fcl.id_feature_category
             WHERE fcl.`id_lang` = '.(int)$id_lang.' ORDER BY fc.`position`'
         );
         return $sql;

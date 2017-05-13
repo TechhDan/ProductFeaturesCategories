@@ -57,6 +57,7 @@ class ProductFeaturesCategories extends Module
         Configuration::updateValue('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS', true);
 
         $install = include(dirname(__FILE__).'/sql/install.php');
+        $install = true;
 
         return $install &&
             $this->installFixture() &&
@@ -78,7 +79,7 @@ class ProductFeaturesCategories extends Module
             $Fixture->name[$language['id_lang']] = 'Default';
         }
         // Shops
-        Shop::addTableAssociation($Fixture::$definition['table'], array('type' => 'shop'));
+        Shop::addTableAssociation(FeatureCategory::$definition['table'], array('type' => 'shop'));
         if ($Fixture->add()) {
             return true;
         }
@@ -163,7 +164,7 @@ class ProductFeaturesCategories extends Module
     public function cleanUpAfterPrestashop()
     {
         $file = _PS_ROOT_DIR_.'/override/classes/Feature.php';
-        $content = file_get_contents($file);
+        $content = Tools::file_get_contents($file);
         $pattern = '/\'table\'(.*)\);/s';
         $result = preg_replace($pattern, '', $content);
         if (!file_put_contents($file, $result)) {
@@ -338,7 +339,6 @@ class ProductFeaturesCategories extends Module
             return $this->display(__FILE__, 'product_features.tpl');
         }
         return false;
-        
     }
 
     private function getAssocFeatureCategories($features)
@@ -348,7 +348,10 @@ class ProductFeaturesCategories extends Module
             $categories[] = (int)$feature['id_feature_category'];
         }
         if (!empty($categories)) {
-            $categories = FeatureCategory::getFeatureCategories(array_unique($categories), $this->context->language->id);
+            $categories = FeatureCategory::getFeatureCategories(
+                array_unique($categories),
+                $this->context->language->id
+            );
             foreach ($categories as &$category) {
                 $category['id_feature_category'] = (int)$category['id_feature_category'];
             }
@@ -359,7 +362,8 @@ class ProductFeaturesCategories extends Module
     private function addFeatureCategories($features)
     {
         foreach ($features as &$feature) {
-                $feature['id_feature_category'] = (int)FeatureCategory::getFeatureCategoryByFeatureId($feature['id_feature']);
+                $feature['id_feature_category'] =
+                    (int)FeatureCategory::getFeatureCategoryByFeatureId($feature['id_feature']);
         }
         return $features;
     }

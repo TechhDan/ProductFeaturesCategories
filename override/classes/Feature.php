@@ -26,7 +26,7 @@
 
 class Feature extends FeatureCore
 {
-    public $category; 
+    public $category;
 
     public static $definition = array(
         'table' => 'feature',
@@ -60,5 +60,4 @@ class Feature extends FeatureCore
         );
         return $id_category;
     }
-
 }

@@ -1,6 +1,6 @@
 <?php
 /**
-* 2016 WebDevOverture
+* 2016-2017 WebDevOverture
 *
 * NOTICE OF LICENSE
 *
@@ -19,10 +19,11 @@
 * needs please refer to http://www.webdevoverture.com for more information.
 *
 *  @author    WebDevOverture <contact@webdevoverture.com>
-*  @copyright 2016 WebDevOverture
+*  @copyright 2016-2017 WebDevOverture
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of WebDevOverture
 */
+
 $sql = array();
 
 $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature` ADD category INT(10) UNSIGNED DEFAULT 1';

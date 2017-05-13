@@ -1,6 +1,6 @@
 <?php
 /**
-* 2016 WebDevOverture
+* 2016-2017 WebDevOverture
 *
 * NOTICE OF LICENSE
 *
@@ -19,10 +19,11 @@
 * needs please refer to http://www.webdevoverture.com for more information.
 *
 *  @author    WebDevOverture <contact@webdevoverture.com>
-*  @copyright 2016 WebDevOverture
+*  @copyright 2016-2017 WebDevOverture
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of WebDevOverture
 */
+
 class AdminFeaturesController extends AdminFeaturesControllerCore
 {
     public function __construct()
@@ -162,12 +163,15 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
         } else {
             return $links;
         }
-        foreach($links as $key => $link) {
+        foreach ($links as $key => $link) {
             if ($default === (int)$link['id_feature_category']) {
-                array_unshift($links, array('name' => $link['name'], 'id_feature_category' => $link['id_feature_category']));
+                array_unshift($links, array(
+                    'name' => $link['name'],
+                    'id_feature_category' => $link['id_feature_category']
+                ));
                 array_splice($links, $key + 1, 1);
             }
         }
         return $links;
-    } 
+    }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
-* 2016-2017 WebDevOverture
+* 2016 WebDevOverture
 *
 * NOTICE OF LICENSE
 *
@@ -19,35 +19,17 @@
 * needs please refer to http://www.webdevoverture.com for more information.
 *
 *  @author    WebDevOverture <contact@webdevoverture.com>
-*  @copyright 2016-2017 WebDevOverture
+*  @copyright 2016 WebDevOverture
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of WebDevOverture
 */
 
-/**
-* In some cases you should not drop the tables.
-* Maybe the merchant will just try to reset the module
-* but does not want to loose all of the data associated to the module.
-*/
+header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
 
-$sql = array();
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 
-$sql[] = 'ALTER TABLE `'._DB_PREFIX_.'feature` DROP COLUMN category';
-
-$sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'feature_category`';
-$sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'feature_category_lang`';
-$sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'feature_category_shop`';
-
-foreach ($sql as $query) {
-    try {
-        if (Db::getInstance()->execute($query) == false) {
-            $this->_errors[] = Tools::displayError('Unknown SQL error while uninstalling');
-            return false;
-        }
-    } catch (Exception $e) {
-        $this->_errors[] = Tools::displayError('SQL Error: ' . $e->getMessage(), false);
-        return false;
-    }
-}
-
-return true;
+header('Location: ../');
+exit;
