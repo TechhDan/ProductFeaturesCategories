@@ -24,6 +24,8 @@
 *  International Registered Trademark & Property of WebDevOverture
 */
 
+require_once _PS_MODULE_DIR_.'productfeaturescategories/classes/FeatureCategory.php';
+
 class AdminProductsController extends AdminProductsControllerCore
 {
     public function initFormFeatures($obj)

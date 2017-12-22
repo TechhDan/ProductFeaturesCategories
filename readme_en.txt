@@ -1,4 +1,5 @@
 # Product Feature Categories
+1.6.x - 1.7.x
 
 This module allows you to organize your features into categories for easier management
 1) Create a category for your features

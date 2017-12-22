@@ -24,10 +24,16 @@
 *  International Registered Trademark & Property of WebDevOverture
 */
 
+require_once _PS_MODULE_DIR_.'productfeaturescategories/classes/FeatureCategory.php';
+
 class AdminFeaturesController extends AdminFeaturesControllerCore
 {
     public function __construct()
     {
+        AdminController::__construct();
+        if (Tools::getValue('viewfeature') !== false && Tools::getValue('id_feature') > 0) {
+            $this->_orderBy = 'id_feature_value';
+        }
         $this->table = 'feature';
         $this->className = 'Feature';
         $this->list_id = 'feature';
@@ -72,7 +78,6 @@ class AdminFeaturesController extends AdminFeaturesControllerCore
                 'confirm' => $this->l('Delete selected items?')
             )
         );
-        AdminController::__construct();
     }
 
     public function renderForm()

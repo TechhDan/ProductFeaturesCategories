@@ -50,10 +50,10 @@ class FeatureCategory extends ObjectModel
         ),
     );
 
-    public function add($autodate = true)
+    public function add($autodate = true, $null_values = true)
     {
         $this->position = self::getLastPosition();
-        return parent::add($autodate, true);
+        return parent::add($autodate, $null_values);
     }
 
     public function update($null_values = false)
@@ -203,5 +203,41 @@ class FeatureCategory extends ObjectModel
             WHERE fcl.`id_lang` = '.(int)$id_lang.' ORDER BY fc.`position`'
         );
         return $sql;
+    }
+
+    /**
+     * 1.7
+     * Override src\PrestaShopBundle\Form\Admin\Feature\ProductFeature.php support
+     *
+     * Add to end of construct
+     *
+     * require_once _PS_MODULE_DIR_.'productfeaturescategories/classes/FeatureCategory.php';
+     * $this->features =  \FeatureCategory::getCategoriesAndFeatures($this->locales[0]['id_lang']);
+    */
+    public static function getCategoriesAndFeatures($id_lang)
+    {
+        $sql = Db::getInstance()->ExecuteS(
+            'SELECT fcl.`name` as category_name, fl.`name` as feature_name, fl.`id_feature`
+            FROM `'._DB_PREFIX_.'feature_category_lang` fcl
+            LEFT JOIN '._DB_PREFIX_.'feature f
+            ON f.category = fcl.id_feature_category
+            LEFT JOIN '._DB_PREFIX_.'feature_lang fl
+            ON fl.id_feature = f.id_feature
+            INNER JOIN `'._DB_PREFIX_.'feature_category` fc
+            ON fc.id_feature_category = fcl.id_feature_category
+            WHERE fcl.`id_lang` = '.(int)$id_lang.' ORDER BY fc.`position`'
+        );
+
+        $result = array();
+        foreach ($sql as $feature_info) {
+            if (array_key_exists($feature_info['category_name'], $result)) {
+                $result[$feature_info['category_name']] =
+                    array_merge($result[$feature_info['category_name']], array($feature_info['feature_name'] => $feature_info['id_feature']));
+            } else {
+                $result[$feature_info['category_name']] = array($feature_info['feature_name'] => $feature_info['id_feature']);
+            }
+        }
+
+        return $result;
     }
 }

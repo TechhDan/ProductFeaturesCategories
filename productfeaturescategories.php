@@ -28,7 +28,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-require dirname(__FILE__).'/classes/FeatureCategory.php';
+require_once dirname(__FILE__).'/classes/FeatureCategory.php';
 
 class ProductFeaturesCategories extends Module
 {
@@ -38,7 +38,7 @@ class ProductFeaturesCategories extends Module
     {
         $this->name = 'productfeaturescategories';
         $this->tab = 'administration';
-        $this->version = '1.0.4';
+        $this->version = '1.0.7';
         $this->author = 'WebDevOverture';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -57,16 +57,14 @@ class ProductFeaturesCategories extends Module
         Configuration::updateValue('PRODUCTFEATURESCATEGORIES_PRODUCT_TABS', true);
 
         $install = include(dirname(__FILE__).'/sql/install.php');
-        $install = true;
 
         return $install &&
             $this->installFixture() &&
-            $this->installOverride() &&
             $this->installTab() &&
+            $this->installOverride() &&
             parent::install() &&
-            $this->registerHook('header') &&
-            $this->registerHook('backOfficeHeader') &&
             $this->registerHook('displayBackOfficeHeader') &&
+            $this->registerHook('header') &&
             $this->registerHook('displayFooterProduct');
     }
 
@@ -306,19 +304,24 @@ class ProductFeaturesCategories extends Module
         $this->html .= $this->displayConfirmation($this->l('Settings updated'));
     }
 
-    public function hookBackOfficeHeader()
+    public function hookHeader()
     {
-        if (Tools::getValue('module_name') == $this->name) {
-            $this->context->controller->addJS($this->_path.'views/js/back.js');
-            $this->context->controller->addCSS($this->_path.'views/css/back.css');
+        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+            if (Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER')) {
+                $this->context->controller->addCSS($this->_path.'/views/css/front_1.7.css');
+            }
+        } else {
+            if (Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER')) {
+                $this->context->controller->addCSS($this->_path.'/views/css/front.css');
+            }
         }
     }
 
-    public function hookHeader()
+    public function hookDisplayBackOfficeHeader($params)
     {
-        $this->context->controller->addJS($this->_path.'/views/js/front.js');
-        if (Configuration::get('PRODUCTFEATURESCATEGORIES_PRODUCT_FOOTER')) {
-            $this->context->controller->addCSS($this->_path.'/views/css/front.css');
+        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+            $this->context->controller->addJS($this->_path . 'views/js/productfeaturescategories_17.js');
+            $this->context->controller->addCSS($this->_path. 'views/css/productfeaturescategories_17.css');
         }
     }
 
@@ -336,7 +339,11 @@ class ProductFeaturesCategories extends Module
                     'fc_categories' => $categories
                 )
             );
-            return $this->display(__FILE__, 'product_features.tpl');
+            if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+                return $this->display(__FILE__, 'product_features_1.7.tpl');
+            } else {
+                return $this->display(__FILE__, 'product_features.tpl');
+            }
         }
         return false;
     }

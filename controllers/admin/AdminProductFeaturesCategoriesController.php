@@ -28,6 +28,7 @@ class AdminProductFeaturesCategoriesController extends ModuleAdminController
 {
     public function __construct()
     {
+        parent::__construct();
         $this->bootstrap = true;
         $this->table = 'feature_category';
         $this->list_id = 'feature_category';
@@ -66,7 +67,6 @@ class AdminProductFeaturesCategoriesController extends ModuleAdminController
                 'confirm' => $this->l('Delete selected items?')
             )
         );
-        parent::__construct();
     }
 
     public function renderList()

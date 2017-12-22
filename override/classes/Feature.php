@@ -60,4 +60,14 @@ class Feature extends FeatureCore
         );
         return $id_category;
     }
+
+    public function update($nullValues = false)
+    {
+        $result = parent::update($nullValues);
+
+        if (version_compare(_PS_VERSION_, '1.6.0.14', '<=') && $result) {
+            $result &= ObjectModel::update($nullValues);
+        }
+        return $result;
+    }
 }

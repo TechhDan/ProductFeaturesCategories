@@ -1,5 +1,5 @@
 /**
-* 2016 WebDevOverture
+* 2017 WebDevOverture
 *
 * NOTICE OF LICENSE
 *
@@ -18,10 +18,26 @@
 * needs please refer to http://www.webdevoverture.com for more information.
 *
 *  @author    WebDevOverture <contact@webdevoverture.com>
-*  @copyright 2016 WebDevOverture
+*  @copyright 2017 WebDevOverture
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of WebDevOverture
 *
-* Don't forget to prefix your containers with your own identifier
-* to avoid any conflicts with others containers.
 */
+$(document).ready(function() {
+	$( "#features-content" ).click(function() {
+
+		// On click of category
+		$('.select2-results__option').on('click', function() {
+			if ($(this).find('ul').is(':visible')) {
+		    	$(this).find('ul').hide();
+			} else {
+				$(this).find('ul').show();
+			}
+		});
+
+		$('.select2-search__field').on('input', function() {
+			$('.select2-results__option > ul').show();
+		});
+
+	});
+});
