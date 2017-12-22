@@ -1,4 +1,5 @@
 # ProductFeatureCategories
+1.6.x - 1.7.x
 Prestashop module to organize features by categories. This module requires manually configuring front-office display which varies between templates.
 
 Organizing your catalog features into groups facilitates product feature management.
