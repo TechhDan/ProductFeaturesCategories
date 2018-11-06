@@ -8,6 +8,3 @@ Organizing your catalog features into groups facilitates product feature managem
 * Organize features into pre-defined groups
 * Toggle categories in the back-office product feature view
 * Includes two custom data-sheet views: Tabs and Table format
-
-![alt text](https://webdevoverture.com/img/p/3/8/38-large_default.jpg)
-![alt text](https://webdevoverture.com/img/p/4/0/40-large_default.jpg)
